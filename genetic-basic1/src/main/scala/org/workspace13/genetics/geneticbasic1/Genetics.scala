@@ -3,7 +3,7 @@ package org.workspace13.genetics.geneticbasic1
 import scala.util.Random
 import com.twitter.util.Eval
 import scala.math._
-import org.workspace13.genetics.Chromosome
+import org.workspace13.genetics.{Population, Chromosome}
 import scala.annotation.tailrec
 
 class Genetics(val value: Int) {
@@ -17,8 +17,8 @@ class Genetics(val value: Int) {
     (None, chromosome.mkString)
   }
 
-  def makePopulation(): Seq[Chromosome] = {
-    for (i <- 1 to 100) yield {
+  def makePopulation(): Population = {
+    for (i <- List.range(1, 101)) yield {
       makeChromosome()
     }
   }
@@ -65,32 +65,32 @@ class Genetics(val value: Int) {
     }
   }
 
-  def scorePopulation(population: Seq[Chromosome]): Seq[Chromosome] = {
+  def scorePopulation(population: Population): Population = {
     population.map(individual => (Some(evaluation(chromosomeToGene(individual))), individual._2))
   }
 
-  def selection(population: Seq[Chromosome]): Seq[Chromosome] = {
+  def selection(population: Population): Population = {
     Random.shuffle(population.take(50))
   }
 
-  def crossover(parent1: Chromosome, parent2: Chromosome): Seq[Chromosome] = {
+  def crossover(parent1: Chromosome, parent2: Chromosome): Population = {
     val random = Random.nextInt(48)
 
     val child1 = (None, parent1._2.take(random) ++ parent2._2.drop(random))
     val child2 = (None, parent2._2.take(random) ++ parent1._2.drop(random))
 
-    Seq(child1, child2)
+    child1 :: child2 :: Nil
   }
 
-  def nextGeneration(population: Seq[Chromosome]): Seq[Chromosome] = {
-    require(population.size % 2 == 0, "population must have a pair number of individuals")
+  def nextGeneration(population: Population): Population = {
+    require(population.size % 2 == 0, f"population [#${population.size}] must have a pair number of individuals")
 
     @tailrec
-    def buildNewGen(pop: Seq[Chromosome], acc: Seq[Chromosome]): Seq[Chromosome] = {
+    def buildNewGen(pop: Population, acc: Population): Population = {
       pop match {
-        case Seq() => acc
-        //        case Seq(x) => acc
-        case Seq(x, y, tail@_ *) => {
+        case Nil => acc
+        case List(_) => acc
+        case x :: y :: tail => {
           val children1 = crossover(x, y)
           val children2 = crossover(x, y)
           buildNewGen(tail, children1 ++ children2 ++ acc)
@@ -105,7 +105,7 @@ class Genetics(val value: Int) {
     val population = makePopulation
     val limit = 50
 
-    def searchNext(pop: Seq[Chromosome], generation: Int): Option[Int] = {
+    def searchNext(pop: Population, generation: Int): Option[Int] = {
       val scoredPop = scorePopulation(pop) sortWith ((c1, c2) => c1._1.getOrElse(Int.MaxValue) < c2._1.getOrElse(Int.MaxValue))
       val best = scoredPop.head._1
       val step = limit - generation + 1

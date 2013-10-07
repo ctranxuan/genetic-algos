@@ -9,4 +9,5 @@ package org.workspace13
  */
 package object genetics {
   type Chromosome = (Option[Int], String)
+  type Population = List[Chromosome]
 }
