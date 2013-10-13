@@ -118,5 +118,28 @@ class GeneticsSpec extends FlatSpec with ShouldMatchers with GivenWhenThen {
     val best = genetics.search(987)
     assert(best.isDefined && best.get < 10)
   }
+
+  "mutate" should "return a chromosome with 1 bit changed" in {
+    val chromosome1 = genetics.makeChromosome
+    val chromosome2  = genetics.mutate(chromosome1)
+
+    val mutationIndex = (chromosome1._2 zip chromosome2._2) segmentLength (c => c._1 == c._2, 0)
+    val mutation = if (chromosome1._2.charAt(mutationIndex) == '0') '1' else '0'
+
+    assert(chromosome2._1 == None)
+    assert(if (mutation =='1') chromosome1._2.charAt(mutationIndex) == '0' else chromosome1._2.charAt(mutationIndex) == '1')
+
+    if (mutationIndex == 0) {
+      assert(chromosome1._2.tail == chromosome1._2.tail)
+
+    } else if (mutationIndex == 47) {
+      assert (chromosome2._2.take(46) == chromosome1._2.take(46))
+
+    } else {
+      assert((chromosome2._2.take(mutationIndex - 1) == chromosome1._2.take(mutationIndex - 1))
+        && (chromosome2._2.drop(mutationIndex + 1) == chromosome1._2.drop(mutationIndex + 1)))
+
+    }
+  }
 }
 

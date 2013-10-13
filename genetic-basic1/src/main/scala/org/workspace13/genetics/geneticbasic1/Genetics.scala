@@ -103,20 +103,43 @@ class Genetics(val value: Int) {
 
   def search(value: Int) = {
     val population = makePopulation
-    val limit = 50
+    val limit = 10000
 
+    @tailrec
     def searchNext(pop: Population, generation: Int): Option[Int] = {
       val scoredPop = scorePopulation(pop) sortWith ((c1, c2) => c1._1.getOrElse(Int.MaxValue) < c2._1.getOrElse(Int.MaxValue))
       val best = scoredPop.head._1
       val step = limit - generation + 1
 
       println(s"Generation: $step Best: $best")
-      if (best.getOrElse(Int.MaxValue) == 0 || generation == 0) best
-      else searchNext(nextGeneration(scoredPop), generation - 1)
+      if (best.getOrElse(Int.MaxValue) == 0 || generation == 0) {
+        if (best.get == 0) {
+          val genes = chromosomeToGene(scoredPop.head)
+          val formula = geneToFormula(genes)
+          println(s"Formula: $formula")
+        }
+        best
+      }
+      else {
+        val nextGen = nextGeneration(scoredPop)
+        searchNext(mutation(nextGen), generation - 1)
+      }
     }
 
     searchNext(population, limit)
+
   }
 
+  def mutate(chromosome: Chromosome): Chromosome = {
+    val bit = Random.nextInt(49)
+    val code = chromosome._2
+
+    if (code.charAt(bit) == '0') (None, code.toList.updated(bit, '1').mkString)
+    else (None, code.toList.updated(bit, '0').mkString)
+  }
+
+  def mutation(population: Population): Population = {
+    population.map(c => if (Random.nextInt(1000) == 0) mutate(c) else c)
+  }
 }
 
